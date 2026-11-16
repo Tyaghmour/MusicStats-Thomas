@@ -28,9 +28,32 @@ class AnalyseurHabitudes:
     def matrice_jour_heure(self, utilisateur):     #matrice 7x24 nombre decoute
         masque = self.df_ecoutes["utilisateur"] == utilisateur
         df_utilisateur = self.df_ecoutes[masque]
+        
+        # Aucun écoute pour cet utilisateur : matrice vide
+        if len(df_utilisateur) == 0:
+            return np.zeros((7, 24))
 
-        nbecoute_jourheure = df_utilisateur.groupby["jour","heure"].size()    #size conte le nombre d'ecoute pour une 
+        #Créer une serie jour-heure-nb ecoute
+        compte = df_utilisateur.groupby["jour","heure"].size()  
+        
         matrice = np.zero((7,24))
+
+        compte = compte.reset_index()
+        for i in range(len(compte)):
+            ligne = compte.iloc[i]
+            jour = int(ligne["jour"])
+            heure = int(ligne["heure"])
+            matrice[jour, heure] += ligne[0]
+
+        # Nombre de semaines couvertes par les écoutes de l'utilisateur
+        nb_jours = (df_utilisateur["date"].max() - df_utilisateur["date"].min()).days + 1
+        nb_semaines = max(1, nb_jours / 7)
+
+        # Moyenne d'écoutes par semaine pour chaque jour et chaque heure
+        matrice = matrice / nb_semaines
+        
+        return matrice
+
         
 
 
