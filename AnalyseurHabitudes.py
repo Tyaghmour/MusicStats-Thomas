@@ -87,4 +87,29 @@ class AnalyseurHabitudes:
             sessions.append(Session(ecoutes))
 
         return sessions
-        
+
+
+    def statistiques(self, utilisateur):
+        sessions = self.decouper_sessions(utilisateur)
+
+        # Aucune session : pas de statistiques possibles
+        if len(sessions) == 0:
+            return None
+
+        matrice = self.matrice_jour_heure(utilisateur)
+        stats = {}
+        stats["nb_sessions"] = len(sessions)
+
+        durees_sessions = [session.duree() for session in sessions]
+        stats["duree_moy"] = np.mean(durees_sessions)
+        stats["duree_max"] = np.max(durees_sessions)
+
+        chansons_sessions = [session.nombre_chansons() for session in sessions]
+        stats["chansons_par_session"] = np.mean(chansons_sessions)
+
+        # Somme des 7 jours pour chaque heure puis l'heure avec le plus d'écoutes
+        stats["heure_pointe"] = np.argmax(matrice.sum(axis=0))
+        # Somme des 24 heures pour chaque jour puis le jour avec le plus d'écoutes
+        stats["jour_favori"] = np.argmax(matrice.sum(axis=1))
+
+        return stats
