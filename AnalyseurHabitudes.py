@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import Session
+
 class AnalyseurHabitudes:
     def __init__(self, collection, seuil_minutes=30):
         self.collection = collection          
@@ -11,29 +13,33 @@ class AnalyseurHabitudes:
         dates = []
         jours = []
         heures = []
+        ecoutes = []
 
         for ecoute in self.collection.ecoutes:
             utilisateurs.append(ecoute.utilisateur.nom)   # le nom, pas l'objet
             dates.append(ecoute.date_heure)               # en utc, si le temps me permet dautre fuseau
             jours.append(ecoute.jour_semaine())
             heures.append(ecoute.heure())
+            ecoutes.append(ecoute)
+
 
         return pd.DataFrame({
             "utilisateur": utilisateurs,
             "date": dates,
             "jour": jours,
-            "heure": heures
+            "heure": heures,
+            "ecoutes": ecoutes
         })
 
     def matrice_jour_heure(self, utilisateur):     #matrice 7x24 nombre decoute
         masque = self.df_ecoutes["utilisateur"] == utilisateur
         df_utilisateur = self.df_ecoutes[masque]
         
-        # Aucun écoute pour cet utilisateur : matrice vide
+        # Aucun écoute pour cet utilisateur alors matrice vide
         if len(df_utilisateur) == 0:
             return np.zeros((7, 24))
 
-        #Créer une serie jour-heure-nb ecoute
+        #Créer une serie jour-heure-nb_ecoute
         compte = df_utilisateur.groupby["jour","heure"].size()  
         
         matrice = np.zero((7,24))
@@ -54,7 +60,31 @@ class AnalyseurHabitudes:
         
         return matrice
 
-        
+    def decouper_sessions(self, utilisateur):
+        masque = self.df_ecoutes["utilisateur"] == utilisateur
+        df_utilisateur = self.df_ecoutes[masque].sort_values("date")   # du plus ancien au plus récent
 
+        sessions = []              
+        ecoutes = []               # écoutes de la session en cours
+        date_precedente = None     # aucune date précedente avec la première
 
+        for i in range(len(df_utilisateur)):
+            ligne = df_utilisateur.iloc[i]
+            date = ligne["date"]
+
+            if date_precedente is not None:
+                ecart = (date - date_precedente).total_seconds() / 60   # écart en minutes
+                if ecart > self.seuil_minutes:
+                    # Trop de temps depuis la dernière écoute alors fin de cette sesion
+                    sessions.append(Session(ecoutes))
+                    ecoutes = []
+
+            ecoutes.append(ligne["ecoute"])
+            date_precedente = date
+
+        # Fermer la dernière session
+        if len(ecoutes) > 0:
+            sessions.append(Session(ecoutes))
+
+        return sessions
         
