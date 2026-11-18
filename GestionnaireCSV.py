@@ -81,3 +81,41 @@ class GestionnaireCSV:
             print("Impossible d'écrire le fichier :", chemin)
             return False
         return True
+
+    def exporter_habitudes(self, chemin_stats, stats, chemin_matrice, matrice):
+        
+        if stats is None:
+            print("Aucune statistique à exporter.")
+            return False
+        if chemin_stats[-4:] != ".csv" or chemin_matrice[-4:] != ".csv":
+            print("Fichier non valide, le nom doit finir par .csv")
+            return False
+
+        #Change stats en bon format pour ensuite le transformer en dataframe
+        donnees = {}
+        for cle in stats:
+            donnees[cle] = [stats[cle]]
+
+        df_stats = pd.DataFrame(donnees)
+
+
+        jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+        heures = [f"{h}h" for h in range(24)]
+
+        df_matrice = pd.DataFrame(matrice, index = jours , columns = heures)
+
+        #Écriture dans fichier excel
+        try:
+            df_stats.to_csv(chemin_stats, index=False)
+            df_matrice.to_csv(chemin_matrice, index=True)
+        except OSError:
+            # Dossier inexistant, fichier ouvert dans Excel, accès refusé...
+            print("Impossible d'écrire les fichiers :", chemin_stats, chemin_matrice)
+            return False
+
+        return True
+
+
+
+        
+    
