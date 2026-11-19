@@ -113,3 +113,6 @@ class AnalyseurHabitudes:
         stats["jour_favori"] = np.argmax(matrice.sum(axis=1))
 
         return stats
+
+    def comparer(self, utilisateur_a, utilisateur_b):
+        return self.statistiques(utilisateur_a), self.statistiques(utilisateur_b)

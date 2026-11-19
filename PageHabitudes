@@ -1,0 +1,14 @@
+import customtkinter as ctk #debut
+import tkinter as tk
+from Collection import CollectionMusicale
+from AnalyseurHabitudes import AnalyseurHabitudes
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+class PageHabitudes(ctk.CTkFrame): 
+    def __init__(self, master, analyseur):
+        super().__init__(master)
+        self.master = master
+        self.analyseur = analyseur
+        self.label_titre = ctk.CTkLabel(self, text="Habitudes d'écoute")
+
+    
